@@ -190,9 +190,35 @@ int main(int argc, char const *argv[]) {
 
 ![](http://oklbfi1yj.bkt.clouddn.com/Linux%E5%86%85%E6%A0%B8%E5%AE%8C%E5%85%A8%E5%89%96%E6%9E%90/8.png)
 
-可以看出，函数swap()从调用者main()的栈帧中获取其参数。
+可以看出，函数swap()从调用者main()的栈帧中获取其参数。（注意一个问题，程序是按照逆向顺序把函数参数压入栈中，即函数最后(最右边的)一个参数先入栈，而最左边的第1个参数在最后调用指令之前入栈）
 
 ##### 3.main()也是一个函数
+
+另外，上面提到C程序的**主程序main()也是一个函数。这是因为在编译链接时它将会作为crt0.s 汇编程序的函数被调用**。crt0.s 是一个桩(stub) 程序，名称中的“crt”是“C run-time”的缩写。**该程序的目标文件将被链接在每个用户执行程序的开始部分**，主要用于**设置一些初始化全局变量等**。Linux0.12中crt0.s汇编程序如下所示。其中已建立并初始化全局变量environ 供程序中的其他模块使用。
+
+```assembly
+.text
+.globl _environ					# 声明全局変量environ (对应C程序中的environ变量)。
+
+__entry:						# 代码入口标号
+		movl 8(%esp), %eax		# 取程序的环境变量指针envp并保存在environ中。
+		movl %eax, _environ		# envp是execve()函数在加载执行文件时设置的。
+		call _main				# 调用我们的主程序。其返回状态值在eax寄存器中。
+		pushl %eax				# 压入返回值作为exit()函数的参数并调用该函数。
+l:		call _exit
+		jmp lb					# 控制应该不会到达这里。若到达这里则继续执行exit()。
+.data
+_environ:						# 定义变量_environ,为其分配一个长字空间，
+		.long 0
+```
+
+通常使用gcc编译链接生成执行文件时，gcc会自动把该文件的代码作为第一个模块链接在可执行程序中。在编译时使用显示详细信息选项“-v”就可以明显地看出这个链接操作过程:
+
+![](http://oklbfi1yj.bkt.clouddn.com/Linux%E5%86%85%E6%A0%B8%E5%AE%8C%E5%85%A8%E5%89%96%E6%9E%90/9.png)
+
+为了使用ELF格式的日标文件以及建立共享库模块文件，现在的gcc编译器(2.x)已经把这个crt0扩展成几个模块: crtl.o、 crti.o、 crtbegin.o、 crtend.o 和crtn.o。**crti.o用于在.init区中执行初始化函数init()。.init 区中包含进程的初始化代码，即当程序开始执行时，系统会在调用main()之前先执行.init中的代码。crtn.o则用于在.fini区中执行进程终止退出处理函数fini()函数，即当程序正常退出时(main()返回之后)，系统会安排执行.fini中的代码**。
+
+
 
 
 
