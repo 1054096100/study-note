@@ -12,8 +12,6 @@
 
 ### 四、创建控制器和方法(同时看看控制器的方法里面是否要进行模型绑定，如果要就记得加上命名空间，例如:`use App\Topic;`)
 
-
-
 ### 1、创建项目的命令：`composer create-project laravel/laravel Laravel5 "5.4.*"`，其中`Laravel5`是项目名字(一个目录名)**
 
 ​	其中的`laravel/laravel`的意思：去`github`上面找`laravel/laravel`这个项目
